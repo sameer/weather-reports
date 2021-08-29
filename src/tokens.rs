@@ -310,11 +310,26 @@ enum_with_str_repr! {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct SeaConditions {
-    /// Seawater temperature
+pub struct WaterConditions {
     pub temperature: Option<ThermodynamicTemperature>,
-    /// On a unit-less scale of 0 = lowest to 9 = highest
-    pub wave_intensity: Option<u8>,
+    pub surface_state: Option<WaterSurfaceState>,
+    pub significant_wave_height: Option<Length>,
+}
+
+enum_with_str_repr! {
+    /// See Table 3700 on page A-326 in the [WMO Manual on Codes](https://library.wmo.int/doc_num.php?explnum_id=10235)
+    WaterSurfaceState {
+        GlassyCalm => "0",
+        RippledCalm => "1",
+        Smooth => "2",
+        Slight => "3",
+        Moderate => "4",
+        Rough => "5",
+        VeryRough => "6",
+        High => "7",
+        VeryHigh => "8",
+        Phenomenal => "9",
+    }
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -356,7 +371,7 @@ pub struct MetarReport<'input> {
     pub observation_type: Option<ObservationType>,
     pub wind: Option<Wind>,
     pub visibility: Option<Visibility>,
-    pub runway_visibility: Vec<RunwayVisibility<'input>>,
+    pub runway_visibilities: Vec<RunwayVisibility<'input>>,
     pub runway_reports: Vec<RunwayReport<'input>>,
     pub weather: Vec<Weather>,
     pub cloud_cover: Vec<CloudCover>,
@@ -373,7 +388,7 @@ pub struct MetarReport<'input> {
     /// Some stations will report the next color state
     pub next_color_state: Option<ColorState>,
     pub recent_weather: Vec<Weather>,
-    pub sea_conditions: Option<SeaConditions>,
+    pub water_conditions: Option<WaterConditions>,
     pub trends: Vec<Trend>,
     pub remark: Option<&'input str>,
     /// Some automated METAR reports indicate if the system needs maintenance

@@ -3,7 +3,7 @@ pub mod tokens;
 
 #[cfg(test)]
 mod tests {
-    use std::io::{Cursor, Read};
+    use std::io::{stderr, Cursor, Read, Write};
 
     use codespan_reporting::term::{
         emit,
@@ -80,16 +80,18 @@ mod tests {
         GzDecoder::new(Cursor::new(include_bytes!("../tests/stations.tar.gz")))
             .read_to_end(&mut archive)
             .unwrap();
+        let mut acc = 0;
         let errors = tar::Archive::new(Cursor::new(archive))
             .entries()
             .unwrap()
             .filter_map(|entry| {
                 let mut entry = entry.unwrap();
                 let mut report = String::default();
-                if let Err(err) = entry.read_to_string(&mut report) {
+                if let Err(_) = entry.read_to_string(&mut report) {
                     return None;
                     // panic!("{} {}", err, entry.path().unwrap().to_string_lossy())
                 }
+                acc += 1;
                 let report = report.split('\n').skip(1).next().unwrap();
                 if let Err(err) = crate::parse::metar(report) {
                     let mut writer = StandardStream::stderr(ColorChoice::Never);
@@ -112,7 +114,21 @@ mod tests {
             .collect::<Vec<_>>();
 
         if !errors.is_empty() {
-            println!("There are {} failures", errors.len());
+            stderr().write_all(b"There are ").unwrap();
+            stderr()
+                .write_all(errors.len().to_string().as_bytes())
+                .unwrap();
+            stderr().write_all(b" failures out of ").unwrap();
+            stderr().write_all(acc.to_string().as_bytes()).unwrap();
+            stderr().write_all(b" cases total (").unwrap();
+            stderr()
+                .write_all(
+                    (100. - errors.len() as f64 / acc as f64 * 100.)
+                        .to_string()
+                        .as_bytes(),
+                )
+                .unwrap();
+            stderr().write_all("% coverage)\n".as_bytes()).unwrap();
         }
     }
 }

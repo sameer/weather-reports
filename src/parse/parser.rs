@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 use uom::{
     si::angle::degree,
     si::f64::{Angle, Length, Pressure, ThermodynamicTemperature, Velocity},
-    si::length::{foot, kilometer, meter, mile, millimeter},
+    si::length::{decimeter, foot, kilometer, meter, mile, millimeter},
     si::pressure::{hectopascal, inch_of_mercury},
     si::thermodynamic_temperature::degree_celsius,
     si::velocity::{kilometer_per_hour, knot, meter_per_second},
@@ -24,7 +24,7 @@ peg::parser! {
                     wind:wind()? whitespace()
                     pre_temperatures:temperatures()? whitespace()
                     visibility:visibility()? whitespace()
-                    runway_visibility:runway_visibility() ** whitespace() whitespace()
+                    runway_visibilities:runway_visibility() ** whitespace() whitespace()
                     weather:weather() ** whitespace() whitespace()
                     cloud_cover:cloud_cover() ** whitespace() whitespace()
                     cavok:("CAVOK" whitespace())?
@@ -40,9 +40,9 @@ peg::parser! {
                     color_state:color_state()? whitespace()
                     next_color_state:color_state()? whitespace()
                     // Some stations report runway visibility after pressure
-                    runway_visibility_post_pressure:runway_visibility() ** whitespace() whitespace()
+                    runway_visibilities_post_pressure:runway_visibility() ** whitespace() whitespace()
                     runway_reports:runway_report() ** whitespace() whitespace()
-                    sea_conditions:sea_conditions()? whitespace()
+                    water_conditions:water_conditions()? whitespace()
                     trends:trend()** whitespace() whitespace()
                     // Some machines use = to indicate end of message
                     remark:$("RMK" [_]*)?
@@ -57,7 +57,7 @@ peg::parser! {
                     observation_type,
                     wind: wind.flatten(),
                     visibility: visibility.flatten(),
-                    runway_visibility: runway_visibility.iter().copied().chain(runway_visibility_post_pressure).flatten().collect(),
+                    runway_visibilities: runway_visibilities.iter().copied().chain(runway_visibilities_post_pressure).flatten().collect(),
                     runway_reports: runway_reports.iter().copied().flatten().collect(),
                     weather: weather.iter().cloned().flatten().collect(),
                     cloud_cover: cloud_cover.iter().copied().chain(cloud_cover_post_pressure).collect(),
@@ -69,7 +69,7 @@ peg::parser! {
                     color_state,
                     next_color_state,
                     recent_weather: recent_weather.iter().cloned().flatten().collect(),
-                    sea_conditions,
+                    water_conditions,
                     trends,
                     remark,
                     maintenance_needed: maintenance_needed.is_some(),
@@ -358,6 +358,13 @@ peg::parser! {
                     cloud_type: cloud_type.flatten(),
                 }
             }
+            / coverage:cloud_coverage() whitespace() base:$(digit() digit() digit()) whitespace() "//" required_whitespace_or_eof() {
+                CloudCover {
+                    coverage,
+                    base: Some(Length::new::<foot>(base.parse().unwrap()) * 100.),
+                    cloud_type: None,
+                }
+            }
             / coverage:cloud_coverage() whitespace() base:$(digit() digit() digit()) whitespace() cloud_type:cloud_type()? {
                 CloudCover {
                     coverage,
@@ -434,12 +441,21 @@ peg::parser! {
 
         rule color_state() -> ColorState = val:$(quiet!{"BLU+" / "BLU" / "WHT" / "GRN" / "YLO1" / "YLO2" / "YLO" / "AMB" / "RED"} / expected!("color state")) { ColorState::try_from(val).unwrap() }
 
-        rule sea_conditions() -> SeaConditions = "W" temperature:$("//" / digit()+) "/" "S" wave_intensity:$("/" / digit()) {
-            SeaConditions {
-                temperature: if temperature == "//" { None } else { Some(ThermodynamicTemperature::new::<degree_celsius>(temperature.parse().unwrap()))},
-                wave_intensity: if wave_intensity == "/" { None } else { Some(wave_intensity.parse().unwrap()) },
+        pub rule water_conditions() -> WaterConditions =
+            "W" temperature:$("//" / digit()+) "/" "S" surface_state:$("/" / digit()) {
+                WaterConditions {
+                    temperature: if temperature == "//" { None } else { Some(ThermodynamicTemperature::new::<degree_celsius>(temperature.parse().unwrap()))},
+                    surface_state: if surface_state == "/" { None } else { Some(WaterSurfaceState::try_from(surface_state).unwrap()) },
+                    significant_wave_height: None,
+                }
             }
-        }
+            / "W" temperature:$("//" / digit()+) "/" "H" wave_height:$("/"+ / digit()+) {
+                WaterConditions {
+                    temperature: if temperature == "//" { None } else { Some(ThermodynamicTemperature::new::<degree_celsius>(temperature.parse().unwrap()))},
+                    surface_state: None,
+                    significant_wave_height: if wave_height.starts_with("/") { None } else { Some(Length::new::<decimeter>(wave_height.parse().unwrap())) },
+                }
+            }
 
         rule trend() -> Trend =
             $(quiet!{"NOSIG" / "NSG"} / expected!("trend")) {

@@ -103,4 +103,11 @@ mod tests {
             pressure(val).expect(val);
         }
     }
+
+    #[test]
+    fn parse_water_conditions() {
+        for val in ["W13/S3", "W13/S/", "W13/H10", "W///S3", "W13/H//"] {
+            water_conditions(val).expect(val);
+        }
+    }
 }
