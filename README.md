@@ -19,8 +19,10 @@ MetarReport {
     identifier: "KSEA",
     observation_time: ZuluDateTime {
         day_of_month: 29,
-        hour: 3,
-        minute: 53,
+        time: ZuluTime {
+            hour: 3,
+            minute: 53,
+        },
         is_zulu: true,
     },
     observation_validity_range: None,
@@ -67,9 +69,7 @@ MetarReport {
         300400.0 m^-1 kg^1 s^-2,
     ),
     accumulated_rainfall: None,
-    is_closed: false,
-    color_state: None,
-    next_color_state: None,
+    color: None,
     recent_weather: [],
     water_conditions: None,
     trends: [],
