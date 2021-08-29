@@ -41,7 +41,7 @@ MetarReport {
             maximum_directional: None,
         },
     ),
-    runway_visibility: [],
+    runway_visibilities: [],
     runway_reports: [],
     weather: [],
     cloud_cover: [
@@ -70,7 +70,7 @@ MetarReport {
     color_state: None,
     next_color_state: None,
     recent_weather: [],
-    sea_conditions: None,
+    water_conditions: None,
     trends: [],
     remark: Some(
         "RMK AO2 SLP179 T01940094\n",
