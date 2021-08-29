@@ -62,7 +62,7 @@ peg::parser! {
                     weather: weather.iter().cloned().flatten().collect(),
                     cloud_cover: cloud_cover.iter().copied().chain(cloud_cover_post_pressure).collect(),
                     cavok: cavok.is_some(),
-                    temperatures: pre_temperatures.flatten().or(temperatures.flatten()).or(temperatures_post_pressure.flatten()),
+                    temperatures: pre_temperatures.flatten().or_else(|| temperatures.flatten()).or_else(|| temperatures_post_pressure.flatten()),
                     pressure: pressure.flatten(),
                     accumulated_rainfall,
                     recent_weather: recent_weather.iter().cloned().flatten().collect(),
@@ -111,7 +111,7 @@ peg::parser! {
 
         pub rule wind() -> Option<Wind> =
             direction:$("VRB" / (digit() digit() digit())) speed:$(("P" digit() digit()) / digit()+) peak_gust:$("G" ("//" / digit()+))? unit:windspeed_unit() whitespace() variance:wind_variance()? {
-                let speed = speed.trim_start_matches("P").parse().unwrap();
+                let speed = speed.trim_start_matches('P').parse().unwrap();
                 Some(Wind {
                     direction: if direction == "VRB" { None } else { Some(Angle::new::<degree>(direction.parse().unwrap())) },
                     speed: match unit {
@@ -120,13 +120,13 @@ peg::parser! {
                         "KMH" => Velocity::new::<kilometer_per_hour>(speed),
                         _ => unreachable!()
                     },
-                    peak_gust: peak_gust.filter(|gusts| *gusts != "G//").map(|gusts| gusts.trim_start_matches("G").parse().unwrap()).map(|gusts| match unit {
+                    peak_gust: peak_gust.filter(|gusts| *gusts != "G//").map(|gusts| gusts.trim_start_matches('G').parse().unwrap()).map(|gusts| match unit {
                         "MPS" => Velocity::new::<meter_per_second>(gusts),
                         "KT" | "KTS" | "KTM" => Velocity::new::<knot>(gusts),
                         "KMH" => Velocity::new::<kilometer_per_hour>(gusts),
                         _ => unreachable!()
                     }),
-                    variance: variance
+                    variance,
                 })
             }
             / ("//////" / "/////") windspeed_unit() {
@@ -174,8 +174,8 @@ peg::parser! {
             }
         rule raw_directional_visibility() -> DirectionalVisibility = distance:raw_visibility() direction:compass_direction() {
             DirectionalVisibility {
-                distance,
                 direction,
+                distance,
             }
         }
         rule raw_visibility() -> Length =
@@ -277,7 +277,7 @@ peg::parser! {
             }
         }
         rule out_of_range() -> OutOfRange = val:$(quiet!{"M" / "P"} / expected!("bound")) { OutOfRange::try_from(val).unwrap() };
-        rule visibility_trend() -> VisibilityTrend = "/"? val:$(quiet!{("D" / "N" / "U")} / expected!("visibility trend")) { VisibilityTrend::try_from(val.trim_start_matches("/")).unwrap() };
+        rule visibility_trend() -> VisibilityTrend = "/"? val:$(quiet!{("D" / "N" / "U")} / expected!("visibility trend")) { VisibilityTrend::try_from(val.trim_start_matches('/')).unwrap() };
 
         pub rule runway_report() -> Option<RunwayReport<'input>> =
             "R" designator:designator() "/" report_info:runway_report_info() {
@@ -414,7 +414,7 @@ peg::parser! {
             }
             / coverage:cloud_coverage() {
                 CloudCover {
-                    coverage: CloudCoverage::try_from(coverage).unwrap(),
+                    coverage,
                     base: None,
                     cloud_type: None,
                 }
@@ -503,7 +503,7 @@ peg::parser! {
                 WaterConditions {
                     temperature: if temperature == "//" { None } else { Some(ThermodynamicTemperature::new::<degree_celsius>(temperature.parse().unwrap()))},
                     surface_state: None,
-                    significant_wave_height: if wave_height.starts_with("/") { None } else { Some(Length::new::<decimeter>(wave_height.parse().unwrap())) },
+                    significant_wave_height: if wave_height.starts_with('/') { None } else { Some(Length::new::<decimeter>(wave_height.parse().unwrap())) },
                 }
             }
 
@@ -535,8 +535,8 @@ peg::parser! {
             }
         rule trend_time() -> TrendTime = time_type:trend_time_type() time:zulu_time() {
             TrendTime {
-                time,
                 time_type,
+                time,
             }
         };
         rule trend_time_type() -> TrendTimeType = val:$(quiet!{"AT" / "FM" / "TL"} / expected!("trend time type")) { TrendTimeType::try_from(val).unwrap() }

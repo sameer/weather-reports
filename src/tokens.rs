@@ -18,10 +18,10 @@ macro_rules! enum_with_str_repr {
             )*
         }
 
-        impl Into<&'static str> for $ident {
-            fn into(self) -> &'static str {
+        impl From<$ident> for &'static str {
+            fn from(slf: $ident) -> Self {
                 use $ident::*;
-                match self {
+                match slf {
                     $(
                         $variant => $val,
                     )*
