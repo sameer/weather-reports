@@ -128,10 +128,7 @@ impl ZuluTimeRange {
     pub fn as_start_and_duration(
         &self,
         date: chrono::Date<chrono_tz::Tz>,
-    ) -> (
-        chrono::DateTime<chrono_tz::Tz>,
-        chrono::Duration,
-    ) {
+    ) -> (chrono::DateTime<chrono_tz::Tz>, chrono::Duration) {
         let begin = self.begin.as_datetime(date);
         let end = self.end.as_datetime(date);
         (begin, (end - begin))

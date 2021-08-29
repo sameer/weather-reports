@@ -44,11 +44,10 @@ peg::parser! {
                     runway_reports:runway_report() ** whitespace() whitespace()
                     water_conditions:water_conditions()? whitespace()
                     trends:trend()** whitespace() whitespace()
-                    // Some machines use = to indicate end of message
-                    remark:$("RMK" [_]*)?
+                    remark:$("RMK" [^'$']*)?
                     maintenance_needed:quiet!{"$"}?
                     quiet!{"/"*}
-                    // machine indication of EOF
+                    // Some machines use = to indicate end of message
                     quiet!{"=" [_]*}?
                     {
                 MetarReport {
