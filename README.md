@@ -4,10 +4,9 @@ A collection of weather report parsers
 
 ## Supported Formats
 
-- [x] METAR
+- [x] [METAR](https://en.wikipedia.org/wiki/METAR)/SPECI
   - [ ] Remark parsing
-- [x] SPECI
-- [ ] TAF
+- [ ] [TAF](https://en.wikipedia.org/wiki/Terminal_aerodrome_forecast)
 
 ## Demo
 
