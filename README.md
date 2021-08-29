@@ -2,6 +2,8 @@
 
 A collection of weather report parsers
 
+[![crates.io](https://img.shields.io/crates/v/weather-reports.svg)](https://crates.io/crates/weather-reports) [![weather-reports](https://docs.rs/weather-reports/badge.svg)](https://docs.rs/weather-reports)[![weather-reports](https://github.com/sameer/weather-reports/actions/workflows/rust.yml/badge.svg)](https://github.com/sameer/weather-reports/actions/workflows/rust.yml) [![codecov](https://codecov.io/gh/sameer/weather-reports/branch/main/graph/badge.svg?token=TPIzIZtbdq)](https://codecov.io/gh/sameer/weather-reports)
+
 ## Supported Formats
 
 - [x] [METAR](https://en.wikipedia.org/wiki/METAR)/SPECI
