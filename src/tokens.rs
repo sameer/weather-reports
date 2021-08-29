@@ -159,6 +159,30 @@ impl ZuluDateTime {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct ZuluTimeRange {
+    pub begin_hour: u8,
+    pub begin_minute: u8,
+    pub end_hour: u8,
+    pub end_minute: u8,
+}
+
+impl ZuluTimeRange {
+    #[cfg(feature = "chrono_helpers")]
+    pub fn as_datetime_range(
+        &self,
+        date: chrono::Date<chrono_tz::Tz>,
+    ) -> (
+        chrono::DateTime<chrono_tz::Tz>,
+        chrono::DateTime<chrono_tz::Tz>,
+    ) {
+        (
+            date.and_hms(self.begin_hour as u32, self.begin_minute as u32, 0),
+            date.and_hms(self.end_hour as u32, self.end_minute as u32, 0),
+        )
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Wind {
     /// A lack of direction indicates variable
@@ -368,6 +392,7 @@ enum_with_str_repr! {
 pub struct MetarReport<'input> {
     pub identifier: &'input str,
     pub observation_time: ZuluDateTime,
+    pub observation_validity_range: Option<ZuluTimeRange>,
     pub observation_type: Option<ObservationType>,
     pub wind: Option<Wind>,
     pub visibility: Option<Visibility>,

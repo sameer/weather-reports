@@ -18,6 +18,7 @@ peg::parser! {
                     report_name()? whitespace()
                     identifier:icao_identifier() whitespace()
                     observation_time:observation_time() whitespace()
+                    observation_validity_range:observation_validity_range()? whitespace()
                     // Some stations incorrectly place METAR here
                     report_name()? whitespace()
                     observation_type:observation_type()? whitespace()
@@ -54,6 +55,7 @@ peg::parser! {
                 MetarReport {
                     identifier,
                     observation_time,
+                    observation_validity_range,
                     observation_type,
                     wind: wind.flatten(),
                     visibility: visibility.flatten(),
@@ -94,6 +96,15 @@ peg::parser! {
                 hour: hour.parse().unwrap(),
                 minute: minute.parse().unwrap(),
                 is_zulu: is_zulu.is_some(),
+            }
+        }
+
+        rule observation_validity_range() -> ZuluTimeRange = begin_hour:$(digit() digit()) begin_minute:$(digit() digit()) "/" end_hour:$(digit() digit()) end_minute:$(digit() digit()) {
+            ZuluTimeRange {
+                begin_hour: begin_hour.parse().unwrap(),
+                begin_minute: begin_minute.parse().unwrap(),
+                end_hour: end_hour.parse().unwrap(),
+                end_minute: end_minute.parse().unwrap(),
             }
         }
 

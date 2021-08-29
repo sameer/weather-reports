@@ -23,6 +23,7 @@ MetarReport {
         minute: 53,
         is_zulu: true,
     },
+    observation_validity_range: None,
     observation_type: None,
     wind: Some(
         Wind {
