@@ -56,9 +56,9 @@ MetarReport {
     cavok: false,
     temperatures: Some(
         Temperatures {
-            air: 19.0 K^1,
+            air: 292.15 K^1,
             dewpoint: Some(
-                9.0 K^1,
+                282.15 K^1,
             ),
         },
     ),
