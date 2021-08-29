@@ -1,4 +1,4 @@
-use uom::si::f64::{Angle, Length, Pressure, TemperatureInterval, Velocity};
+use uom::si::f64::{Angle, Length, Pressure, ThermodynamicTemperature, Velocity};
 
 macro_rules! enum_with_str_repr {
     (
@@ -253,9 +253,9 @@ pub struct CloudCover {
 /// If negative, these are rounded up to the more positive whole degree
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Temperatures {
-    pub air: TemperatureInterval,
+    pub air: ThermodynamicTemperature,
     /// Some stations don't report this
-    pub dewpoint: Option<TemperatureInterval>,
+    pub dewpoint: Option<ThermodynamicTemperature>,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -312,7 +312,7 @@ enum_with_str_repr! {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct SeaConditions {
     /// Seawater temperature
-    pub temperature: Option<TemperatureInterval>,
+    pub temperature: Option<ThermodynamicTemperature>,
     /// On a unit-less scale of 0 = lowest to 9 = highest
     pub wave_intensity: Option<u8>,
 }

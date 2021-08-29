@@ -1,10 +1,10 @@
 use std::convert::TryFrom;
 use uom::{
     si::angle::degree,
-    si::f64::{Angle, Length, Pressure, TemperatureInterval, Velocity},
+    si::f64::{Angle, Length, Pressure, ThermodynamicTemperature, Velocity},
     si::length::{foot, kilometer, meter, mile, millimeter},
     si::pressure::{hectopascal, inch_of_mercury},
-    si::temperature_interval::degree_celsius,
+    si::thermodynamic_temperature::degree_celsius,
     si::velocity::{kilometer_per_hour, knot, meter_per_second},
 };
 
@@ -397,8 +397,8 @@ peg::parser! {
             }
 
 
-        rule temperature() -> TemperatureInterval = minus:(quiet!{"M" / "-"} / expected!("minus"))? temp:$(digit()+) {
-            TemperatureInterval::new::<degree_celsius>(if minus.is_some() { -temp.parse::<f64>().unwrap() } else { temp.parse().unwrap() })
+        rule temperature() -> ThermodynamicTemperature = minus:(quiet!{"M" / "-"} / expected!("minus"))? temp:$(digit()+) {
+            ThermodynamicTemperature::new::<degree_celsius>(if minus.is_some() { -temp.parse::<f64>().unwrap() } else { temp.parse().unwrap() })
         }
 
         pub rule temperatures() -> Temperatures =
@@ -436,7 +436,7 @@ peg::parser! {
 
         rule sea_conditions() -> SeaConditions = "W" temperature:$("//" / digit()+) "/" "S" wave_intensity:$("/" / digit()) {
             SeaConditions {
-                temperature: if temperature == "//" { None } else { Some(TemperatureInterval::new::<degree_celsius>(temperature.parse().unwrap()))},
+                temperature: if temperature == "//" { None } else { Some(ThermodynamicTemperature::new::<degree_celsius>(temperature.parse().unwrap()))},
                 wave_intensity: if wave_intensity == "/" { None } else { Some(wave_intensity.parse().unwrap()) },
             }
         }
