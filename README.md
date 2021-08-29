@@ -80,3 +80,19 @@ MetarReport {
 }
 Success!
 ```
+
+## References
+
+- https://sto.iki.fi/metar/
+- https://aviation.stackexchange.com/questions/39482/what-is-this-weird-format-r06l-clrd62-in-metar-for-runway-being-cleared
+- https://metar-taf.com/explanation
+- http://www.bom.gov.au/aviation/about-us/faq/
+- https://mediawiki.ivao.aero/index.php?title=METAR_explanation
+- https://business.desu.edu/sites/business/files/document/16/metar_and_taf_codes.pdf
+- https://meteocentre.com/doc/metar.html
+- https://aviation.stackexchange.com/questions/42554/what-does-the-code-fu1fu2fu5-mean-in-this-metar
+- https://library.wmo.int/doc_num.php?explnum_id=10474
+- https://library.wmo.int/doc_num.php?explnum_id=10235
+- https://en.wikipedia.org/wiki/METAR
+- https://aviation.stackexchange.com/questions/88908/what-does-w13-s3-mean-in-this-metar-report
+- http://www.ogimet.com/index.phtml.en
