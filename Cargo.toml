@@ -1,0 +1,30 @@
+[package]
+name = "weather-reports"
+authors = ["Sameer Puri <crates@purisa.me>"]
+version = "0.1.0"
+edition = "2018"
+keywords = ["weather", "metar", "taf", "speci"]
+categories = ["parsing"]
+repository = "https://github.com/sameer/weather-reports"
+documentation = "https://docs.rs/weather-reports"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+description = "A collection of weather report parsers"
+
+[dependencies]
+peg = { version = "0.7" }
+chrono = { version = "0.4", optional = true }
+chrono-tz = { version = "0.5", optional = true }
+uom = "0.31"
+codespan = { version = "0.11", optional = true }
+codespan-reporting = { version = "0.11", optional = true }
+
+[dev-dependencies]
+tar = "0.4"
+flate2 = "1"
+
+[features]
+trace = ["peg/trace"]
+default = ["codespan_helpers", "chrono_helpers"]
+chrono_helpers = ["chrono", "chrono-tz"]
+codespan_helpers = ["codespan", "codespan-reporting"]
