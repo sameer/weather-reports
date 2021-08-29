@@ -12,6 +12,7 @@ use crate::tokens::*;
 
 peg::parser! {
     pub grammar weather_reports() for str {
+        /// [METAR report](https://en.wikipedia.org/wiki/METAR) parser
         pub rule metar() -> MetarReport<'input> =
                     whitespace()
                     report_name()? whitespace()
