@@ -1,0 +1,235 @@
+Afg	Afghanistan
+Alb	Albania
+Alg	Algeria
+Amer	American Samoa
+Ango	Angola
+Angui	Anguilla
+Anta	Antarctica
+Anti	Antigua and Barbuda
+Arg	Argentina
+Arm	Armenia
+Aru	Aruba
+Austra	Australia
+Austri	Austria
+Azer	Azerbaijan
+Baha	Bahamas, The
+Bahr	Bahrain
+Bang	Bangladesh
+Barb	Barbados
+Bela	Belarus
+Belg	Belgium
+Beli	Belize
+Beni	Benin
+Berm	Bermuda
+Boli	Bolivia
+Bona	Bonaire
+Bosn	Bosnia and Herzegovina
+Bots	Botswana
+Bouv	Bouvet Island
+Braz	Brazil
+British Ind	British Indian Ocean Territory
+British Vir	British Virgin Islands
+Brun	Brunei
+Bulg	Bulgaria
+Burk	Burkina Faso
+Buru	Burundi
+Camb	Cambodia
+Came	Cameroon
+Cana	Canada
+Cape	Cape Verde
+Caym	Cayman Islands
+Cent	Central African Republic
+Cha	Chad
+Chil	Chile
+Chin	China
+Chri	Christmas Island
+Colom	Colombia
+Como	Comoros
+Congo, Rep	Congo, Republic of the
+Congo, Demo	Congo, Democratic Republic of the
+Cook	Cook Islands
+Cote	Cote d'Ivoire
+Cost	Costa Rica
+Croa	Croatia
+Cuba	Cuba
+Cura	Curacao
+Cyp	Cyprus
+Czec	Czech Republic
+Den	Denmark
+Dji	Djibouti
+Dominica	Dominica
+Dominican	Dominican Republic
+East	East Timor
+Ecua	Ecuador
+Egyp	Egypt
+El S	El Salvador
+Equat	Equatorial Guinea
+Eritr	Eritrea
+Esto	Estonia
+Ethi	Ethiopia
+Falk	Falkland Islands
+Faro	Faroe Islands
+Fin	Finland
+Fiji	Fiji
+France	France
+French Gui	French Guiana
+French P	French Polynesia
+French Sou	French Southern Territories
+Gab	Gabon
+Gamb	Gambia, The
+Geor	Georgia
+Germ	Germany
+Ghan	Ghana
+Gibr	Gibraltar
+Greec	Greece
+Green	Greenland
+Gren	Grenada
+Guad	Guadeloupe
+Guam	Guam Territory
+Guat	Guatemala
+Guinea	Guinea
+Guinea-	Guinea-Bissau
+Guy	Guyana
+Hait	Haiti
+Hond	Honduras
+Hong	Hong kong
+Hung	Hungary
+Icel	Iceland
+India	India
+Indon	Indonesia
+Iraq	Iraq
+Iran	Ir\u00e1n
+Irel	Ireland
+Isra	Israel
+Ital	Italy
+Jam	Jamaica
+Jap	Japan
+Jor	Jordan
+Kaza	Kazakhstan
+Keny	Kenya
+Kiri	Kiribati
+Korea, N	Korea, North
+Korea, S	Korea, South
+Kos	Kosovo
+Kuwait	Kuwait
+Kyrg	Kyrgyzstan
+Laos	Laos
+Latv	Latvia
+Leso	Lesotho
+Leba	Lebanon
+Libe	Liberia
+Liby	Libya
+Liec	Liechtenstein
+Lith	Lithuania
+Luxe	Luxembourg
+Maca	Macau
+Mace	Macedonia, The Republic of
+Mada	Madagascar
+Malaw	Malawi
+Malay	Malaysia
+Mald	Maldives
+Mali	Mali
+Malt	Malta
+Marsh	Marshall Islands
+Marti	Martinique
+Maurita	Mauritania
+Mauriti	Mauritius
+Mayot	Mayotte, overseas french Department
+Mexi	Mexico
+Micro	Micronesia, Federated States of
+Mold	Moldova
+Mong	Mongolia
+Monte	Montengro
+Monts	Montserrat
+Moro	Morocco
+Moza	Mozambique
+Myan	Myanmar
+Nami	Namibia
+Naur	Nauru
+Nep	Nepal
+Netherland	Netherlands
+New C	New Caledonia
+New Z	New Zealand
+Nica	Nicaragua
+Niger	Niger
+Nigeria	Nigeria
+Niue	Niue
+Norw	Norway
+Oma	Oman
+Pak	Pakistan
+Pala	Palau
+Pale	Palestina
+Pana	Panama
+Papu	Papua New Guinea
+Para	Paraguay
+Peru	Peru
+Pitc	Pitcairn Islands
+Phil	Philippines
+Pola	Poland
+Port	Portugal
+Puer	Puerto Rico
+Qata	Qatar
+Reun	Reunion
+Roma	Romania
+Russ	Russia
+Rwan	Rwanda
+Saba	Saba
+Saint E	Saint Eustatius
+Saint K	Saint Kitts and Nevis
+Saint P	Saint Pierre and Miquelon
+Saint V	Saint Vincent and the Grenadines
+Sao	Sao Tome and Principe
+Saint H	Saint Helena, Ascension and Tristan da Cunha
+Saint L	Saint Lucia
+Samo	Samoa
+Saud	Saudi Arabia
+Sene	Senegal
+Serb	Serbia
+Seyc	Seychelles
+Sier	Sierra Leone
+Sing	Singapore
+Sint	Sint Maarten
+Slova	Slovakia
+Slove	Slovenia
+Solo	Solomon Islands
+South G	South Georgia and the Islands
+Soma	Somalia
+South A	South Africa
+South S	South Sudan
+Spa	Spain
+Sri L	Sri Lanka
+Suda	Sudan
+Suri	Suriname
+Swed	Sweden
+Swit	Switzerland
+Swaz	Swaziland
+Syr	Syria
+Taiw	Taiwan
+Taji	Tajikistan
+Tanz	Tanzania
+Thai	Thailand
+Toke	Tokelau Islands
+Togo	Togo
+Tong	Tonga
+Trin	Trinidad and Tobago
+Tuni	Tunisia
+Turke	Turkey
+Turkm	Turkmenistan
+Turks	Turks and Caicos Islands
+Tuva	Tuvalu
+Ukra	Ukraine
+Ugan	Uganda
+United A	United Arab Emirates
+United K	United Kingdom
+United S	United States
+Urug	Uruguay
+Uzbe	Uzbekistan
+Vanu	Vanuatu
+Vene	Venezuela
+Viet	Vietnam
+Virg	Virgin Islands
+Wall	Wallis and Futuna french Islands
+West	Western Sahara
+Yem	Yemen
+Zamb	Zambia
+Zimba	Zimbabwe

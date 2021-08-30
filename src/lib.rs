@@ -75,6 +75,83 @@ mod tests {
     }
 
     #[test]
+    fn validate_against_all_ogimet_latest_reports_by_country() {
+        let mut archive = vec![];
+        GzDecoder::new(Cursor::new(include_bytes!("../tests/countries.tar.gz")))
+            .read_to_end(&mut archive)
+            .unwrap();
+        tar::Archive::new(Cursor::new(archive))
+            .entries()
+            .unwrap()
+            .for_each(|entry| {
+                let mut entry = entry.unwrap();
+                let mut html_page = String::default();
+                entry.read_to_string(&mut html_page).unwrap();
+                if html_page.contains("No METAR/SPECI reports") {
+                    return;
+                }
+                let reports_in_country = html_page
+                    .rsplit("<pre>")
+                    .next()
+                    .unwrap()
+                    .split("</pre>")
+                    .next()
+                    .unwrap()
+                    .rsplit("###################################")
+                    .next()
+                    .unwrap();
+
+                let mut acc = 0;
+                let errors = reports_in_country
+                    .split('=')
+                    .filter(|report| report.len() >= 14)
+                    .map(|report| report.split_at(13).1)
+                    .filter(|report| {
+                        // Skip Canada SAO observations
+                        if report.contains("AUTO8") {
+                            false
+                        } else {
+                            true
+                        }
+                    })
+                    .filter_map(|report| {
+                        acc += 1;
+                        if let Err(err) = crate::parse::metar(report) {
+                            let mut writer = StandardStream::stderr(ColorChoice::Never);
+                            let config = codespan_reporting::term::Config::default();
+                            emit(
+                                &mut writer,
+                                &config,
+                                &codespan_reporting::files::SimpleFile::new(
+                                    format!(
+                                        "countries/{}",
+                                        entry.path().unwrap().to_string_lossy()
+                                    ),
+                                    report,
+                                ),
+                                &into_diagnostic(&err),
+                            )
+                            .unwrap();
+                            Some(err)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+
+                if !errors.is_empty() {
+                    println!(
+                        "### {}: {} failures out of {} total cases ({}% coverage)",
+                        entry.path().unwrap().to_string_lossy(),
+                        errors.len(),
+                        acc,
+                        (100. - errors.len() as f64 / acc as f64 * 100.)
+                    );
+                }
+            });
+    }
+
+    #[test]
     fn validate_against_all_noaa_station_metar_reports() {
         let mut archive = vec![];
         GzDecoder::new(Cursor::new(include_bytes!("../tests/stations.tar.gz")))
@@ -114,21 +191,12 @@ mod tests {
             .collect::<Vec<_>>();
 
         if !errors.is_empty() {
-            stderr().write_all(b"There are ").unwrap();
-            stderr()
-                .write_all(errors.len().to_string().as_bytes())
-                .unwrap();
-            stderr().write_all(b" failures out of ").unwrap();
-            stderr().write_all(acc.to_string().as_bytes()).unwrap();
-            stderr().write_all(b" cases total (").unwrap();
-            stderr()
-                .write_all(
-                    (100. - errors.len() as f64 / acc as f64 * 100.)
-                        .to_string()
-                        .as_bytes(),
-                )
-                .unwrap();
-            stderr().write_all("% coverage)\n".as_bytes()).unwrap();
+            println!(
+                "### NOAA: {} failures out of {} total cases ({}% coverage)",
+                errors.len(),
+                acc,
+                (100. - errors.len() as f64 / acc as f64 * 100.)
+            );
         }
     }
 }

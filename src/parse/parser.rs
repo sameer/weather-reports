@@ -16,12 +16,13 @@ peg::parser! {
         pub rule metar() -> MetarReport<'input> =
                     whitespace()
                     report_name()? whitespace()
+                    pre_observation_flags:observation_flag() ** whitespace() whitespace()
                     identifier:icao_identifier() whitespace()
                     observation_time:observation_time() whitespace()
                     observation_validity_range:observation_validity_range()? whitespace()
                     // Some stations incorrectly place METAR here
                     report_name()? whitespace()
-                    observation_type:observation_type()? whitespace()
+                    observation_flags:observation_flag() ** whitespace() whitespace()
                     wind:wind()? whitespace()
                     pre_temperatures:temperatures()? whitespace()
                     visibility:visibility()? whitespace()
@@ -37,6 +38,7 @@ peg::parser! {
                     temperatures_post_pressure:temperatures()? whitespace()
                     accumulated_rainfall:accumulated_rainfall()? whitespace()
                     recent_weather:recent_weather() ** whitespace() whitespace()
+                    cloud_cover_post_recent_weather:cloud_cover() ** whitespace() whitespace()
                     // Military stations often report these
                     color:color()? whitespace()
                     // Some stations report runway visibility after pressure
@@ -45,22 +47,23 @@ peg::parser! {
                     water_conditions:water_conditions()? whitespace()
                     trends:trend()** whitespace() whitespace()
                     remark:$("RMK" [^'$']*)?
-                    maintenance_needed:quiet!{"$"}?
-                    quiet!{"/"*}
+                    maintenance_needed:quiet!{"$"}? whitespace()
+                    // Consumes trailing garbage characters
+                    quiet!{"/"*} whitespace()
                     // Some machines use = to indicate end of message
-                    quiet!{"=" [_]*}?
+                    quiet!{"=" [_]*}? whitespace()
                     {
                 MetarReport {
                     identifier,
                     observation_time,
                     observation_validity_range,
-                    observation_type,
+                    observation_flags: pre_observation_flags.iter().copied().chain(observation_flags).collect(),
                     wind: wind.flatten(),
                     visibility: visibility.flatten(),
                     runway_visibilities: runway_visibilities.iter().copied().chain(runway_visibilities_post_pressure).flatten().collect(),
                     runway_reports: runway_reports.iter().copied().flatten().collect(),
                     weather: weather.iter().cloned().flatten().collect(),
-                    cloud_cover: cloud_cover.iter().copied().chain(cloud_cover_post_pressure).collect(),
+                    cloud_cover: cloud_cover.iter().copied().chain(cloud_cover_post_pressure).chain(cloud_cover_post_recent_weather).collect(),
                     cavok: cavok.is_some(),
                     temperatures: pre_temperatures.flatten().or_else(|| temperatures.flatten()).or_else(|| temperatures_post_pressure.flatten()),
                     pressure: pressure.flatten(),
@@ -75,7 +78,7 @@ peg::parser! {
             }
         rule report_name() -> &'input str = quiet!{$("METAR" / "SPECI")} / expected!("report name");
 
-        pub rule icao_identifier() -> &'input str = quiet!{$(letter() letter_or_digit() letter_or_digit() letter_or_digit())};
+        pub rule icao_identifier() -> &'input str = $(quiet!{letter() letter_or_digit()*<3>} / expected!("ICAO identifier"));
 
         /// This must also consume garbage characters from irregular reports
         rule whitespace() = required_whitespace()?
@@ -107,7 +110,7 @@ peg::parser! {
             }
         }
 
-        rule observation_type() -> ObservationType = val:$(quiet!{"AUTO" / "COR" / "CCA" / "CCB" / "RTD"} / expected!("observation type")) { ObservationType::try_from(val).unwrap() };
+        rule observation_flag() -> ObservationFlag = val:$(quiet!{"AUTO" / "NIL" / "COR" / "CCA" / "CCB" / "RTD"} / expected!("observation flag")) &required_whitespace_or_eof() { ObservationFlag::try_from(val).unwrap() };
 
         pub rule wind() -> Option<Wind> =
             direction:$("VRB" / (digit() digit() digit())) speed:$(("P" digit() digit()) / digit()+) peak_gust:$("G" ("//" / digit()+))? unit:windspeed_unit() whitespace() variance:wind_variance()? {
@@ -482,7 +485,7 @@ peg::parser! {
             }
         }
 
-        rule color() -> Color = is_black:"BLACK"? whitespace() current_color:color_state() whitespace() next_color:color_state()? {
+        rule color() -> Color = is_black:"BLACK"? whitespace() current_color:color_state() whitespace() next_color:color_state()? &required_whitespace_or_eof() {
             Color {
                 is_black: is_black.is_some(),
                 current_color,

@@ -46,8 +46,9 @@ macro_rules! enum_with_str_repr {
 }
 
 enum_with_str_repr! {
-    ObservationType {
+    ObservationFlag {
         Auto => "AUTO",
+        Nil => "NIL",
         Correction => "COR",
         CorrectionA => "CCA",
         CorrectionB => "CCB",
@@ -423,7 +424,7 @@ pub struct MetarReport<'input> {
     pub observation_time: ZuluDateTime,
     /// Usually used by TAFs, but some stations include this
     pub observation_validity_range: Option<ZuluTimeRange>,
-    pub observation_type: Option<ObservationType>,
+    pub observation_flags: Vec<ObservationFlag>,
     pub wind: Option<Wind>,
     pub visibility: Option<Visibility>,
     /// Included by some airport stations
