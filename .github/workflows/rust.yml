@@ -25,6 +25,13 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-coverage-${{ runner.os }}-${{ hashFiles('**/Cargo.toml') }}-cli
       - name: Install IFPS
         run: |
           sudo snap install ipfs
