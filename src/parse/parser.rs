@@ -18,7 +18,7 @@ peg::parser! {
                     report_name()? whitespace()
                     pre_observation_flags:observation_flag() ** whitespace() whitespace()
                     identifier:icao_identifier() whitespace()
-                    observation_time:observation_time() whitespace()
+                    observation_time:observation_time()? whitespace()
                     observation_validity_range:observation_validity_range()? whitespace()
                     // Some stations incorrectly place METAR here
                     report_name()? whitespace()
@@ -302,10 +302,7 @@ peg::parser! {
         rule recent_weather() -> Option<Weather> = "RE" weather:weather() { weather }
 
         pub rule weather() -> Option<Weather> =
-            "//" {
-                None
-            }
-            / intensity:intensity() vicinity:"VC"? descriptor:descriptor()? precipitation:precipitation()+ {
+            intensity:intensity() vicinity:"VC"? descriptor:descriptor()? precipitation:precipitation()+ &required_whitespace_or_eof() {
                 Some(Weather {
                     intensity,
                     vicinity: vicinity.is_some(),
@@ -313,7 +310,7 @@ peg::parser! {
                     condition: Some(Condition::Precipitation(precipitation)),
                 })
             }
-            / intensity:intensity() vicinity:"VC"? descriptor:descriptor()? obscuration:obscuration() {
+            / intensity:intensity() vicinity:"VC"? descriptor:descriptor()? obscuration:obscuration() &required_whitespace_or_eof() {
                 Some(Weather {
                     intensity,
                     vicinity: vicinity.is_some(),
@@ -321,7 +318,7 @@ peg::parser! {
                     condition: Some(Condition::Obscuration(obscuration)),
                 })
             }
-            / intensity:intensity() vicinity:"VC"? descriptor:descriptor()? other:other() {
+            / intensity:intensity() vicinity:"VC"? descriptor:descriptor()? other:other() &required_whitespace_or_eof() {
                 Some(Weather {
                     intensity,
                     vicinity: vicinity.is_some(),
@@ -329,7 +326,7 @@ peg::parser! {
                     condition: Some(Condition::Other(other)),
                 })
             }
-            / intensity:intensity() vicinity:"VC"? descriptor:descriptor() {
+            / intensity:intensity() vicinity:"VC"? descriptor:descriptor() &required_whitespace_or_eof() {
                 Some(Weather {
                     intensity,
                     vicinity: vicinity.is_some(),
@@ -485,13 +482,21 @@ peg::parser! {
             }
         }
 
-        rule color() -> Color = is_black:"BLACK"? whitespace() current_color:color_state() whitespace() next_color:color_state()? &required_whitespace_or_eof() {
-            Color {
-                is_black: is_black.is_some(),
-                current_color,
-                next_color,
+        pub rule color() -> Color =
+            is_black:"BLACK"? whitespace() current_color:color_state() whitespace() next_color:color_state() &required_whitespace_or_eof() {
+                Color {
+                    is_black: is_black.is_some(),
+                    current_color,
+                    next_color: Some(next_color),
+                }
             }
-        }
+            / is_black:"BLACK"? whitespace() current_color:color_state() &required_whitespace_or_eof() {
+                Color {
+                    is_black: is_black.is_some(),
+                    current_color,
+                    next_color: None,
+                }
+            }
         rule color_state() -> ColorState = val:$(quiet!{"BLU+" / "BLU" / "WHT" / "GRN" / "YLO1" / "YLO2" / "YLO" / "AMB" / "RED"} / expected!("color state")) { ColorState::try_from(val).unwrap() }
 
         pub rule water_conditions() -> WaterConditions =

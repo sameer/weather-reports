@@ -110,4 +110,11 @@ mod tests {
             water_conditions(val).expect(val);
         }
     }
+
+    #[test]
+    fn parse_color() {
+        for val in ["WHT", "BLACKWHT", "WHT BLU"] {
+            color(val).expect(val);
+        }
+    }
 }

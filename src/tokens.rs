@@ -421,7 +421,7 @@ enum_with_str_repr! {
 pub struct MetarReport<'input> {
     /// Station [ICAO identifier](https://en.wikipedia.org/wiki/ICAO_airport_code)
     pub identifier: &'input str,
-    pub observation_time: ZuluDateTime,
+    pub observation_time: Option<ZuluDateTime>,
     /// Usually used by TAFs, but some stations include this
     pub observation_validity_range: Option<ZuluTimeRange>,
     pub observation_flags: Vec<ObservationFlag>,

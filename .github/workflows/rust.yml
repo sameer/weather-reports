@@ -25,6 +25,13 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - name: Install IFPS
+        run: |
+          sudo snap install ipfs
+      - name: Configure and start IPFS daemon
+        run: |
+          ipfs init --profile server
+          ipfs daemon&
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
