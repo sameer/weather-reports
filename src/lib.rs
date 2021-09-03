@@ -120,7 +120,8 @@ mod tests {
 
     #[test]
     fn validate_against_all_ogimet_august_2021_reports_by_station() {
-        let response = reqwest::blocking::get(
+        let mut zst = vec![];
+        reqwest::blocking::get(
             "http://localhost:8080/ipfs/QmSafVXLeEYiSmofSxKcWCAHfRz9EwHAkS1tYDRPtxt7qz",
         )
         .or_else(|_| {
@@ -128,8 +129,10 @@ mod tests {
                 "https://ipfs.io/ipfs/QmSafVXLeEYiSmofSxKcWCAHfRz9EwHAkS1tYDRPtxt7qz",
             )
         })
+        .unwrap()
+        .read_to_end(&mut zst)
         .unwrap();
-        tar::Archive::new(Decoder::new(response).unwrap())
+        tar::Archive::new(Decoder::new(Cursor::new(zst)).unwrap())
             .entries()
             .unwrap()
             .for_each(|entry| {
