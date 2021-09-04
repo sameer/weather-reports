@@ -18,9 +18,17 @@ fn main() {
         filename => std::fs::read_to_string(&filename).expect("file isn't readable"),
     };
 
+    if cfg!(feature = "trace") {
+        println!("[PEG_INPUT_START]");
+        println!("{}", report);
+        println!("[PEG_TRACE_START]");
+    }
+
     match metar(&report) {
         Ok(ast) => {
-            println!("{:#?}", ast);
+            if !cfg!(feature = "trace") {
+                println!("{:#?}", ast);
+            }
             eprintln!("Success!");
         }
         Err(err) => {
@@ -41,5 +49,8 @@ fn main() {
             )
             .unwrap();
         }
+    }
+    if cfg!(feature = "trace") {
+        println!("[PEG_TRACE_STOP]");
     }
 }
