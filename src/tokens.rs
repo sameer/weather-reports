@@ -140,18 +140,25 @@ impl ZuluTimeRange {
 pub struct Wind {
     /// A lack of direction indicates variable
     pub direction: Option<Angle>,
-    pub speed: Velocity,
+    pub speed: Option<Velocity>,
     pub peak_gust: Option<Velocity>,
     pub variance: Option<(Angle, Angle)>,
 }
 
 impl Wind {
-    pub fn is_calm(&self) -> bool {
-        self.speed.value < f64::EPSILON
-            && self
-                .direction
-                .map(|angle| angle.value < f64::EPSILON)
-                .unwrap_or(false)
+    pub fn is_calm(&self) -> Option<bool> {
+        if let (Some(Velocity { value: speed, .. }), Some(Angle { value: angle, .. })) =
+            (self.speed, self.direction)
+        {
+            Some(
+                speed < f64::EPSILON
+                    && angle < f64::EPSILON
+                    && self.peak_gust.is_none()
+                    && self.variance.is_none(),
+            )
+        } else {
+            None
+        }
     }
 }
 
@@ -165,17 +172,17 @@ pub struct RunwayVisibility<'input> {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum VisibilityType {
     Varying {
-        lower: RawRunwayVisibility,
-        upper: RawRunwayVisibility,
+        lower: RawVisibility,
+        upper: RawVisibility,
     },
-    Fixed(RawRunwayVisibility),
+    Fixed(RawVisibility),
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct RawRunwayVisibility {
+pub struct RawVisibility {
     /// If present, visibility is out of the observable range
     pub out_of_range: Option<OutOfRange>,
-    pub value: Length,
+    pub distance: Length,
 }
 
 enum_with_str_repr! {
@@ -331,7 +338,7 @@ pub struct Color {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Visibility {
-    pub prevailing: Length,
+    pub prevailing: Option<RawVisibility>,
     /// Typically reported when visibility in a particular direction differs significantly from prevailing visibility
     /// If there is more than one direction, the most operationally significant direction is used
     pub minimum_directional: Option<DirectionalVisibility>,
@@ -342,7 +349,7 @@ pub struct Visibility {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct DirectionalVisibility {
     pub direction: CompassDirection,
-    pub distance: Length,
+    pub distance: RawVisibility,
 }
 
 enum_with_str_repr! {

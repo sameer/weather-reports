@@ -137,6 +137,7 @@ mod tests {
             .unwrap()
             .for_each(|entry| {
                 let mut entry = entry.unwrap();
+                let path = entry.path().unwrap().to_string_lossy().to_string();
                 let mut html_page = String::default();
                 entry.read_to_string(&mut html_page).unwrap();
                 if html_page.contains("No METAR/SPECI reports") {
@@ -159,8 +160,9 @@ mod tests {
                     .filter(|report| report.len() >= 14)
                     .map(|report| report.split_at(13).1)
                     .filter(|report| {
-                        // Skip Canada SAO observations
-                        if report.contains("AUTO8") {
+                        // Skip SAO observations
+                        let sao_name = path.get(1..=3).unwrap();
+                        if report.starts_with(&format!(" {} ", sao_name)) {
                             false
                         } else {
                             true
@@ -175,7 +177,7 @@ mod tests {
                                 &mut writer,
                                 &config,
                                 &codespan_reporting::files::SimpleFile::new(
-                                    format!("stations/{}", entry.path().unwrap().to_string_lossy()),
+                                    format!("stations/{}", path),
                                     report,
                                 ),
                                 &into_diagnostic(&err),
@@ -191,7 +193,7 @@ mod tests {
                 if !errors.is_empty() {
                     println!(
                         "### {}: {} failures out of {} total cases ({:.2}% coverage)",
-                        entry.path().unwrap().to_string_lossy(),
+                        path,
                         errors.len(),
                         acc,
                         (100. - errors.len() as f64 / acc as f64 * 100.)

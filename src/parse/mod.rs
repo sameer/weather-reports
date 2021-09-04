@@ -117,4 +117,11 @@ mod tests {
             color(val).expect(val);
         }
     }
+
+    #[test]
+    fn parse_whitespace() {
+        for val in [" ///// "] {
+            whitespace(val).expect(val);
+        }
+    }
 }
