@@ -11,6 +11,7 @@ fn main() {
 
     let report: String = match filename.as_ref() {
         "-" => {
+            eprintln!("Reading from stdin");
             let mut acc = String::default();
             std::io::stdin().read_to_string(&mut acc).unwrap();
             acc

@@ -81,6 +81,14 @@ MetarReport {
 Success!
 ```
 
+## Debugging
+
+Each example generates a parser trace when the trace feature is enabled. To generate and visualize one with [pegviz](https://github.com/fasterthanlime/pegviz):
+
+```
+cargo run --release --features trace --example metar - | pegviz --output index.html && firefox index.html
+```
+
 ## References
 
 - https://sto.iki.fi/metar/
