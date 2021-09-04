@@ -52,6 +52,7 @@ enum_with_str_repr! {
         Correction => "COR",
         CorrectionA => "CCA",
         CorrectionB => "CCB",
+        CorrectionC => "CCC",
         Delayed => "RTD",
     }
 }

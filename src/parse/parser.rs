@@ -125,7 +125,7 @@ peg::parser! {
             }
         }
 
-        rule observation_flag() -> ObservationFlag = val:$(quiet!{"AUTO" / "NIL" / "COR" / "CCA" / "CCB" / "RTD"} / expected!("observation flag")) { ObservationFlag::try_from(val).unwrap() };
+        rule observation_flag() -> ObservationFlag = val:$(quiet!{"AUTO" / "NIL" / "COR" / "CCA" / "CCB" / "CCC" / "RTD"} / expected!("observation flag")) { ObservationFlag::try_from(val).unwrap() };
 
         pub rule wind() -> Option<Wind> =
             direction:$("VRB" / (digit()*<3>))? speed:$(("P" digit()*<2>) / (digit()+ ("." digit()+)?))? peak_gust:$("G" ("//" / digit()+))? unit:windspeed_unit() whitespace() variance:wind_variance()? {

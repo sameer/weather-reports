@@ -104,3 +104,4 @@ cargo run --release --features trace --example metar - | pegviz --output index.h
 - https://en.wikipedia.org/wiki/METAR
 - https://aviation.stackexchange.com/questions/88908/what-does-w13-s3-mean-in-this-metar-report
 - http://www.ogimet.com/index.phtml.en
+- https://www.icao.int/NACC/Documents/Meetings/2014/ECARAIM/REF03-ICAOCodes.pdf
