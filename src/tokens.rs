@@ -45,15 +45,55 @@ macro_rules! enum_with_str_repr {
     };
 }
 
-enum_with_str_repr! {
-    ObservationFlag {
-        Auto => "AUTO",
-        Nil => "NIL",
-        Correction => "COR",
-        CorrectionA => "CCA",
-        CorrectionB => "CCB",
-        CorrectionC => "CCC",
-        Delayed => "RTD",
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ObservationFlag {
+    Auto,
+    Nil,
+    Correction { letter: Option<char> },
+    Delayed,
+}
+
+impl From<ObservationFlag> for String {
+    fn from(slf: ObservationFlag) -> Self {
+        use ObservationFlag::*;
+        match slf {
+            Auto => "AUTO".to_string(),
+            Nil => "NIL".to_string(),
+            Correction { letter: None } => "COR".to_string(),
+            Correction {
+                letter: Some(letter),
+            } => format!("CC{}", letter),
+            Delayed => "RTD".to_string(),
+        }
+    }
+}
+
+impl<'input> std::convert::TryFrom<&'input str> for ObservationFlag {
+    type Error = ();
+
+    fn try_from(val: &'input str) -> Result<Self, Self::Error> {
+        use ObservationFlag::*;
+        match val {
+            "AUTO" => Ok(Auto),
+            "NIL" => Ok(Nil),
+            "COR" => Ok(Correction { letter: None }),
+            correction_with_letter if correction_with_letter.starts_with("CC") => {
+                let mut it = correction_with_letter.chars().skip(2);
+                let letter = it.next();
+                let remaining = it.count();
+                if let (Some((letter, true)), 0) =
+                    (letter.zip(letter.map(char::is_alphabetic)), remaining)
+                {
+                    Ok(Correction {
+                        letter: Some(letter),
+                    })
+                } else {
+                    Err(())
+                }
+            }
+            "RTD" => Ok(Delayed),
+            _ => Err(()),
+        }
     }
 }
 
@@ -83,15 +123,15 @@ enum_with_str_repr! {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct ZuluDateTime {
+pub struct DateTime {
     pub day_of_month: u8,
-    pub time: ZuluTime,
+    pub time: MilitaryTime,
     /// Some stations omit the Z. It is unclear whether this means
     /// that the timestamp is not zulu, or if it is incorrect implementation
     pub is_zulu: bool,
 }
 
-impl ZuluDateTime {
+impl DateTime {
     #[cfg(feature = "chrono_helpers")]
     pub fn as_datetime(&self, year: i32, month: u32) -> chrono::DateTime<chrono_tz::Tz> {
         self.time.as_datetime(chrono::TimeZone::ymd(
@@ -104,12 +144,12 @@ impl ZuluDateTime {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct ZuluTime {
+pub struct MilitaryTime {
     pub hour: u8,
     pub minute: u8,
 }
 
-impl ZuluTime {
+impl MilitaryTime {
     #[cfg(feature = "chrono_helpers")]
     pub fn as_datetime(
         &self,
@@ -120,12 +160,12 @@ impl ZuluTime {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct ZuluTimeRange {
-    pub begin: ZuluTime,
-    pub end: ZuluTime,
+pub struct TimeRange {
+    pub begin: MilitaryTime,
+    pub end: MilitaryTime,
 }
 
-impl ZuluTimeRange {
+impl TimeRange {
     #[cfg(feature = "chrono_helpers")]
     pub fn as_start_and_duration(
         &self,
@@ -210,7 +250,52 @@ pub struct RunwayReport<'input> {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum RunwayReportInfo {
     /// Runway has been cleared of any deposits
-    Cleared { friction: Option<f64> },
+    Cleared {
+        friction: Option<f64>,
+    },
+    ClosedSnowOrIce,
+    Condition {
+        deposit: DepositType,
+        coverage: Option<Coverage>,
+        depth: Option<Length>,
+        friction_coefficient: Option<f64>,
+        braking_action: Option<BrakingAction>,
+    },
+}
+
+enum_with_str_repr! {
+    DepositType {
+        ClearAndDry => "0",
+        Damp => "1",
+        Wet => "2",
+        Frost => "3",
+        DrySnow => "4",
+        WetSnow => "5",
+        Slush => "6",
+        Ice => "7",
+        CompactedSnow => "8",
+        FrozenRidges => "9",
+    }
+}
+
+enum_with_str_repr! {
+    Coverage {
+        VeryLow => "1",
+        Low => "2",
+        Medium => "5",
+        High => "9",
+    }
+}
+
+enum_with_str_repr! {
+    BrakingAction {
+        Poor => "91",
+        PoorToMedium => "92",
+        Medium => "93",
+        MediumToGood => "94",
+        Good => "95",
+        UnreliableMeasurement => "99",
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -342,9 +427,17 @@ pub struct Visibility {
     pub prevailing: Option<RawVisibility>,
     /// Typically reported when visibility in a particular direction differs significantly from prevailing visibility
     /// If there is more than one direction, the most operationally significant direction is used
-    pub minimum_directional: Option<DirectionalVisibility>,
+    ///
+    /// Sometimes, the direction may not be reported at all.
+    pub minimum: Option<DirectionalOrRawVisiblity>,
     /// Reported in addition to the minimum when there is large difference in directional visibility (i.e. 1500M vs 5000M)
     pub maximum_directional: Option<DirectionalVisibility>,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum DirectionalOrRawVisiblity {
+    Raw(RawVisibility),
+    Directional(DirectionalVisibility),
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -412,26 +505,23 @@ pub struct TrendReport {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct TrendTime {
-    pub time_type: TrendTimeType,
-    pub time: ZuluTime,
-}
-
-enum_with_str_repr! {
-    TrendTimeType {
-        At => "AT",
-        From => "FM",
-        Until => "TL",
-    }
+pub enum TrendTime {
+    At(MilitaryTime),
+    Range {
+        from: MilitaryTime,
+        until: MilitaryTime,
+    },
+    From(MilitaryTime),
+    Until(MilitaryTime),
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct MetarReport<'input> {
     /// Station [ICAO identifier](https://en.wikipedia.org/wiki/ICAO_airport_code)
     pub identifier: &'input str,
-    pub observation_time: Option<ZuluDateTime>,
+    pub observation_time: Option<DateTime>,
     /// Usually used by TAFs, but some stations include this
-    pub observation_validity_range: Option<ZuluTimeRange>,
+    pub observation_validity_range: Option<TimeRange>,
     pub observation_flags: Vec<ObservationFlag>,
     pub wind: Option<Wind>,
     pub visibility: Option<Visibility>,

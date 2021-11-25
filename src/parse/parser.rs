@@ -89,43 +89,47 @@ peg::parser! {
         rule required_whitespace() =
             quiet!{
                 (
-                    (" " ("/"+ " ")+)
-                    / (" " ("M" " ")+)
-                    / " "
-                    / "\r\n"
-                    / "\n"
-                    / "\t"
-                    ">"
+                    (whitespace_char()+ ("/"+ whitespace_char())+)
+                    / (whitespace_char()+ ("M" whitespace_char())+)
+                    / whitespace_char()+
                 )+
             }
             / expected!("whitespace");
+        rule whitespace_char() -> &'input str = $(
+                " "
+                / "\r\n"
+                / "\n"
+                / "\t"
+                / ">"
+            );
         rule digit() -> &'input str = quiet!{$(['0'..='9'])} / expected!("digit");
         rule letter() -> &'input str = quiet!{$(['A'..='Z'])} / expected!("letter");
         rule letter_or_digit() -> &'input str = letter() / digit();
 
-        pub rule observation_time() -> ZuluDateTime = day_of_month:$(digit() digit()) time:zulu_time() is_zulu:"Z"? {
+        pub rule observation_time() -> DateTime = day_of_month:$(digit() digit()) time:military_time() is_zulu:"Z"? {
             // TODO: some stations don't include the Z. Not sure if that could mean it is local time and not GMT.
-            ZuluDateTime {
+            DateTime {
                 day_of_month: day_of_month.parse().unwrap(),
                 time,
                 is_zulu: is_zulu.is_some(),
             }
         }
-        rule zulu_time() -> ZuluTime = hour:$(digit()*<2>) minute:$(digit()*<2>) {
-            ZuluTime {
+        rule military_time() -> MilitaryTime = hour:$(digit()*<2>) minute:$(digit()*<2>) {
+            MilitaryTime {
                 hour: hour.parse().unwrap(),
                 minute: minute.parse().unwrap(),
             }
         }
 
-        rule observation_validity_range() -> ZuluTimeRange = begin:zulu_time() "/" end:zulu_time() {
-            ZuluTimeRange {
+        rule observation_validity_range() -> TimeRange = begin:military_time() "/" end:military_time() {
+            TimeRange {
                 begin,
                 end,
             }
         }
 
-        rule observation_flag() -> ObservationFlag = val:$(quiet!{"AUTO" / "NIL" / "COR" / "CCA" / "CCB" / "CCC" / "RTD"} / expected!("observation flag")) { ObservationFlag::try_from(val).unwrap() };
+        rule observation_flag() -> ObservationFlag = val:$(quiet!{"AUTO" / "NIL" / correction() / "RTD"} / expected!("observation flag")) { ObservationFlag::try_from(val).unwrap() };
+        rule correction() -> &'input str = $("COR" / ("CC" letter()));
 
         pub rule wind() -> Option<Wind> =
             direction:$("VRB" / (digit()*<3>))? speed:$(("P" digit()*<2>) / (digit()+ ("." digit()+)?))? peak_gust:$("G" ("//" / digit()+))? unit:windspeed_unit() whitespace() variance:wind_variance()? {
@@ -147,13 +151,11 @@ peg::parser! {
                     variance,
                 })
             }
-            / ("//////" / "/////") windspeed_unit() {
+            / ("//////" / "/////") windspeed_unit() whitespace() variance:("///V///")? {
                 None
             }
         rule windspeed_unit() -> &'input str = $(quiet!{"MPS" / "KTM" / "KTS" / "KT" / "KMH"} / expected!("velocity unit"))
-
-
-        rule wind_variance() -> (Angle, Angle) = variance_begin:$(digit()+) "V" variance_end:$(digit()+) {
+        rule wind_variance() -> (Angle, Angle) = variance_begin:$(digit()*<3>) "V" variance_end:$(digit()*<3>) {
             (
                 Angle::new::<degree>(variance_begin.parse().unwrap()),
                 Angle::new::<degree>(variance_end.parse().unwrap()),
@@ -165,42 +167,45 @@ peg::parser! {
             (digit()*) "NDV" visibility_unit()? { None }
             / "////" visibility_unit() { None }
             / "////" "NDV" visibility_unit()? { None }
-            / prevailing:raw_visibility() whitespace() minimum_directional:raw_directional_visibility() whitespace() maximum_directional:raw_directional_visibility() {
+            / prevailing:raw_visibility() whitespace() minimum:directional_or_raw_visibility() whitespace() maximum_directional:directional_visibility() {
                 Some(Visibility {
                     prevailing: Some(prevailing),
-                    minimum_directional: Some(minimum_directional),
+                    minimum: Some(minimum),
                     maximum_directional: Some(maximum_directional),
                 })
             }
-            / prevailing:raw_visibility() whitespace() minimum_directional:raw_directional_visibility() {
+            / prevailing:raw_visibility() whitespace() minimum:directional_or_raw_visibility() {
                 Some(Visibility {
                     prevailing: Some(prevailing),
-                    minimum_directional: Some(minimum_directional),
+                    minimum: Some(minimum),
                     maximum_directional: None,
                 })
             }
-            / minimum_directional:raw_directional_visibility() whitespace() maximum_directional:raw_directional_visibility() {
+            / minimum:directional_visibility() whitespace() maximum_directional:directional_visibility() {
                 Some(Visibility {
                     prevailing: None,
-                    minimum_directional: Some(minimum_directional),
+                    minimum: Some(DirectionalOrRawVisiblity::Directional(minimum)),
                     maximum_directional: Some(maximum_directional),
                 })
             }
-            / minimum_directional:raw_directional_visibility() {
+            / minimum:directional_visibility() {
                 Some(Visibility {
                     prevailing: None,
-                    minimum_directional: Some(minimum_directional),
+                    minimum: Some(DirectionalOrRawVisiblity::Directional(minimum)),
                     maximum_directional: None,
                 })
             }
             / prevailing:raw_visibility() {
                 Some(Visibility {
                     prevailing: Some(prevailing),
-                    minimum_directional: None,
+                    minimum: None,
                     maximum_directional: None,
                 })
             }
-        rule raw_directional_visibility() -> DirectionalVisibility = distance:raw_visibility() direction:compass_direction() {
+        rule directional_or_raw_visibility() -> DirectionalOrRawVisiblity =
+            directional:directional_visibility() { DirectionalOrRawVisiblity::Directional(directional) }
+            / raw:raw_visibility() { DirectionalOrRawVisiblity::Raw(raw) }
+        rule directional_visibility() -> DirectionalVisibility = distance:raw_visibility() direction:compass_direction() {
             DirectionalVisibility {
                 direction,
                 distance,
@@ -332,6 +337,55 @@ peg::parser! {
                     friction: if friction == "//" { None } else { Some(friction.parse::<f64>().unwrap()) }
                 }
             }
+            / "SNOCLO" { RunwayReportInfo::ClosedSnowOrIce }
+            / deposit:deposit_type() coverage:coverage() depth:depth() braking_action:braking_action() {
+                RunwayReportInfo::Condition {
+                    deposit,
+                    coverage,
+                    depth,
+                    friction_coefficient: None,
+                    braking_action,
+                }
+            }
+            / deposit:deposit_type() coverage:coverage() depth:depth() friction_coefficient:friction_coefficient() {
+                RunwayReportInfo::Condition {
+                    deposit,
+                    coverage,
+                    depth,
+                    friction_coefficient: Some(friction_coefficient),
+                    braking_action: None,
+                }
+            }
+        rule deposit_type() -> DepositType = digit:$(digit()) { DepositType::try_from(digit).unwrap() }
+        rule coverage() -> Option<Coverage> = digit:$(quiet!{ "1" / "2" / "5" / "9" / "/" } / expected!("coverage")) {
+            if digit == "/" {
+                None
+            } else {
+                Some(Coverage::try_from(digit).unwrap())
+            }
+        }
+        rule depth() -> Option<Length> = digits:$(digit()*<2> / "//") {
+            match digits {
+                "//" => None,
+                "92" => Some(10.),
+                "93" => Some(15.),
+                "94" => Some(20.),
+                "95" => Some(25.),
+                "96" => Some(30.),
+                "97" => Some(35.),
+                "98" => Some(40.),
+                "99" => None,
+                other => Some(digits.parse::<f64>().unwrap())
+            }.map(Length::new::<millimeter>)
+        }
+        rule braking_action() -> Option<BrakingAction> = digits:$(("9" (['1'..='5'] / "9")) / "//") {
+            if digits == "//" {
+                None
+            } else {
+                Some(BrakingAction::try_from(digits).unwrap())
+            }
+        }
+        rule friction_coefficient() -> f64 = digits:$(['0'..='8'] digit()) { digits.parse::<f64>().unwrap() / 100. }
 
         rule designator() -> &'input str = $(quiet!{digit()+ ("L"/"C"/"R"/"D")?} / expected!("runway designator"));
 
@@ -563,7 +617,7 @@ peg::parser! {
             }
 
         rule trend() -> Trend =
-            $(quiet!{"NOSIG" / "NOISIG" / "N0SIG" / "NOS16" / "NOSING" / "NOSG" / "NSG"} / expected!("trend")) {
+            $(quiet!{"NOSIG" / "NOISIG" / "NSOIG" / "N0SIG" / "NOS16" / "NOSING" / "NOSG" / "NSG" / "NOSIC" / "NOSIGI" } / expected!("trend")) {
                 Trend::NoSignificantChange
             }
             /   val:$(quiet!{"BECMG" / "TEMPO"} / expected!("trend")) whitespace()
@@ -588,12 +642,21 @@ peg::parser! {
                         _ => unreachable!()
                     }
             }
-        rule trend_time() -> TrendTime = time_type:trend_time_type() time:zulu_time() {
-            TrendTime {
-                time_type,
-                time,
+        rule trend_time() -> TrendTime =
+            "FM" from:military_time() whitespace() "TL" until:military_time() {
+                TrendTime::Range {
+                    from,
+                    until,
+                }
             }
-        };
-        rule trend_time_type() -> TrendTimeType = val:$(quiet!{"AT" / "FM" / "TL"} / expected!("trend time type")) { TrendTimeType::try_from(val).unwrap() }
+            / "FM" time:military_time() {
+                TrendTime::From(time)
+            }
+            / "AT" time:military_time() {
+                TrendTime::At(time)
+            }
+            / "TL" time:military_time() {
+                TrendTime::Until(time)
+            };
     }
 }

@@ -57,7 +57,7 @@ mod tests {
 
     #[test]
     fn parse_wind() {
-        for val in ["1804KT", "VRB04G19KT", "09015G25KT"] {
+        for val in ["1804KT", "VRB04G19KT", "09015G25KT", "/////KT ///V///"] {
             wind(val).expect(val);
         }
     }
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn parse_whitespace() {
-        for val in [" ///// "] {
+        for val in [" ///// ", " > ", "\t", "\r\n\r\n", " > /// \n> "] {
             whitespace(val).expect(val);
         }
     }
