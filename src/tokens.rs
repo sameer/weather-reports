@@ -1,3 +1,4 @@
+
 use uom::si::f64::{Angle, Length, Pressure, ThermodynamicTemperature, Velocity};
 
 macro_rules! enum_with_str_repr {
@@ -308,6 +309,25 @@ pub struct Weather {
     pub condition: Option<Condition>,
 }
 
+impl From<Weather> for String {
+    fn from(slf: Weather) -> Self {
+        let intensity = <&str>::from(slf.intensity);
+        let vicinity = match slf.vicinity {
+            true => "VC",
+            false => ""
+        };
+        let descriptor = match slf.descriptor {
+            Some(d) => <&str>::from(d),
+            None => ""
+        };
+        let condition = match slf.condition {
+            Some(c) => c.into(),
+            None => "".to_string()
+        };
+        format!("{}{}{}{}", intensity, vicinity, descriptor, condition)
+    }
+}
+
 enum_with_str_repr! {
     Intensity {
         Light => "-",
@@ -335,6 +355,22 @@ pub enum Condition {
     Precipitation(Vec<Precipitation>),
     Obscuration(Obscuration),
     Other(Other),
+}
+
+impl From<Condition> for String {
+    fn from(slf: Condition) -> Self {
+        use Condition::*;
+        match slf {
+            Precipitation(p) => {
+                p.iter()
+                    .map(|p| -> &str { From::from(*p) })
+                    .flat_map(|s|{s.chars()})
+                    .collect::<String>()
+            }
+            Obscuration(o) => <&str>::from(o).to_string(),
+            Other(o) => <&str>::from(o).to_string(),
+        }
+    }
 }
 
 enum_with_str_repr! {
