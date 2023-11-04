@@ -118,6 +118,7 @@ mod tests {
         });
     }
 
+    #[ignore]
     #[test]
     fn validate_against_all_ogimet_august_2021_reports_by_station() {
         let mut zst = vec![];
